@@ -8,15 +8,15 @@ import { CATEGORIES, SITE_DESCRIPTION, SITE_TITLE } from '../consts';
 
 const allPosts = await getCollection('posts');
 
-const latestByCategory = Object.fromEntries(
-	Object.keys(CATEGORIES).map((cat) => [
-		cat,
-		allPosts
-			.filter((p) => p.data.category === cat)
-			.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
-			.slice(0, 2),
-	])
-);
+const pinnedPosts = allPosts
+	.filter((p) => p.data.pinned)
+	.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
+	.slice(0, 3);
+
+const latestPosts = allPosts
+	.filter((p) => !p.data.pinned)
+	.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf())
+	.slice(0, 2);
 ---
 
 <!doctype html>
@@ -39,88 +39,77 @@ const latestByCategory = Object.fromEntries(
 				font-size: 1.1em;
 				margin: 0;
 			}
-			.categories-grid {
-				display: grid;
-				grid-template-columns: repeat(2, 1fr);
-				gap: 1.5rem;
-				max-width: 900px;
-				margin: 0 auto 3em;
+			.section {
+				max-width: 720px;
+				margin: 0 auto 2.5em;
 				padding: 0 1em;
 			}
-			.category-card {
-				border: 1px solid rgb(var(--gray-light));
-				border-radius: 12px;
-				padding: 1.25em;
-				box-shadow: var(--box-shadow);
-				transition: box-shadow 0.2s ease;
-			}
-			.category-card:hover {
-				box-shadow: 0 4px 16px rgba(var(--black), 12%);
-			}
-			.category-header {
-				display: flex;
-				align-items: center;
-				gap: 0.5em;
-				margin-bottom: 0.75em;
-			}
-			.category-header .emoji {
-				font-size: 1.4em;
-			}
-			.category-header h2 {
-				margin: 0;
-				font-size: 1.1em;
+			.section-title {
+				font-size: 0.85em;
+				font-weight: 700;
+				letter-spacing: 0.08em;
+				text-transform: uppercase;
+				color: rgb(var(--gray));
+				margin: 0 0 0.75em;
 			}
 			.post-list {
 				list-style: none;
 				padding: 0;
-				margin: 0 0 0.75em 0;
+				margin: 0;
 			}
 			.post-list li {
-				padding: 0.25em 0;
-				border-top: 1px solid rgb(var(--gray-light));
-				font-size: 0.9em;
+				border-bottom: 1px solid rgb(var(--gray-light));
+				padding: 0.75em 0;
 			}
 			.post-list li:first-child {
-				border-top: none;
+				border-top: 1px solid rgb(var(--gray-light));
 			}
 			.post-list a {
 				display: flex;
 				justify-content: space-between;
-				gap: 0.5em;
+				align-items: baseline;
+				gap: 1em;
 				text-decoration: none;
 				color: rgb(var(--black));
 			}
-			.post-list a:hover {
+			.post-list a:hover .post-title {
 				color: var(--accent);
 			}
-			.post-list .post-date {
+			.post-title {
+				font-weight: 600;
+			}
+			.post-meta {
+				display: flex;
+				align-items: center;
+				gap: 0.5em;
+				flex-shrink: 0;
+			}
+			.post-date {
+				color: rgb(var(--gray));
+				font-size: 0.9em;
+				white-space: nowrap;
+			}
+			.post-category {
+				font-size: 0.78em;
+				padding: 0.1em 0.5em;
+				border-radius: 999px;
+				border: 1px solid rgb(var(--gray-light));
 				color: rgb(var(--gray));
 				white-space: nowrap;
-				flex-shrink: 0;
+			}
+			.pin-icon {
+				font-size: 0.85em;
+				margin-right: 0.3em;
+				opacity: 0.5;
 			}
 			.empty-notice {
 				color: rgb(var(--gray));
-				font-size: 0.9em;
 				font-style: italic;
-				margin: 0 0 0.75em;
-			}
-			.see-all {
-				display: block;
-				text-align: right;
-				font-size: 0.85em;
-				color: var(--accent);
-				text-decoration: none;
-			}
-			.see-all:hover {
-				text-decoration: underline;
+				font-size: 0.9em;
 			}
 			@media (max-width: 720px) {
-				.categories-grid {
-					grid-template-columns: 1fr;
-				}
-				.hero h1 {
-					font-size: 1.8em;
-				}
+				.hero h1 { font-size: 1.8em; }
+				.post-category { display: none; }
 			}
 		</style>
 	</head>
@@ -132,34 +121,57 @@ const latestByCategory = Object.fromEntries(
 				<p>日本生活・開發日記・遊戲・音樂・小說・雜雜的</p>
 			</section>
 
-			<div class="categories-grid">
-				{
-					Object.entries(CATEGORIES).map(([slug, { name, emoji }]) => (
-						<div class="category-card">
-							<div class="category-header">
-								<span class="emoji">{emoji}</span>
-								<h2>{name}</h2>
-							</div>
-							{latestByCategory[slug].length > 0 ? (
-								<ul class="post-list">
-									{latestByCategory[slug].map((post) => (
-										<li>
-											<a href={`/posts/${post.id}/`}>
-												<span>{post.data.title}</span>
-												<span class="post-date">
-													<FormattedDate date={post.data.pubDate} />
-												</span>
-											</a>
-										</li>
-									))}
-								</ul>
-							) : (
-								<p class="empty-notice">尚無文章</p>
-							)}
-							<a href={`/${slug}/`} class="see-all">查看全部 →</a>
-						</div>
-					))
-				}
+			<div class="section">
+				<p class="section-title">📌 精選文章</p>
+				{pinnedPosts.length > 0 ? (
+					<ul class="post-list">
+						{pinnedPosts.map((post) => (
+							<li>
+								<a href={`/posts/${post.id}/`}>
+									<span>
+										<span class="pin-icon">📌</span>
+										<span class="post-title">{post.data.title}</span>
+									</span>
+									<span class="post-meta">
+										<span class="post-category">
+											{CATEGORIES[post.data.category]?.emoji} {CATEGORIES[post.data.category]?.name}
+										</span>
+										<span class="post-date">
+											<FormattedDate date={post.data.pubDate} />
+										</span>
+									</span>
+								</a>
+							</li>
+						))}
+					</ul>
+				) : (
+					<p class="empty-notice">尚無釘選文章，在文章 frontmatter 加上 <code>pinned: true</code> 即可。</p>
+				)}
+			</div>
+
+			<div class="section">
+				<p class="section-title">🕐 最新文章</p>
+				{latestPosts.length > 0 ? (
+					<ul class="post-list">
+						{latestPosts.map((post) => (
+							<li>
+								<a href={`/posts/${post.id}/`}>
+									<span class="post-title">{post.data.title}</span>
+									<span class="post-meta">
+										<span class="post-category">
+											{CATEGORIES[post.data.category]?.emoji} {CATEGORIES[post.data.category]?.name}
+										</span>
+										<span class="post-date">
+											<FormattedDate date={post.data.pubDate} />
+										</span>
+									</span>
+								</a>
+							</li>
+						))}
+					</ul>
+				) : (
+					<p class="empty-notice">尚無文章。</p>
+				)}
 			</div>
 		</main>
 		<Footer />

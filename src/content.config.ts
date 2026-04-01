@@ -14,6 +14,7 @@ const posts = defineCollection({
 			category: z.enum(['japan-life', 'dev-diary', 'games', 'music', 'novels', 'misc', 'vlog']),
 			tags: z.array(z.string()).optional(),
 			externalLink: z.string().url().optional(),
+			pinned: z.boolean().optional(),
 		}),
 });
 
