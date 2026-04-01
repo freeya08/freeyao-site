@@ -1,4 +1,5 @@
 ---
+import { Image } from 'astro:assets';
 import AboutHeroImage from '../assets/aboutME.jpg';
 import Layout from '../layouts/BlogPost.astro';
 ---
@@ -7,8 +8,14 @@ import Layout from '../layouts/BlogPost.astro';
 	title="關於逍姚"
 	description="關於這個站的主人"
 	pubDate={new Date('2026-04-01')}
-	heroImage={AboutHeroImage}
 >
+	<Image
+		src={AboutHeroImage}
+		alt="關於逍姚"
+		width={AboutHeroImage.width}
+		height={AboutHeroImage.height}
+		style="width: 100%; height: auto; border-radius: 12px; box-shadow: var(--box-shadow); margin-bottom: 1.5em;"
+	/>
 	<p>
 		嗨，我是逍姚，目前旅居日本。這裡是我的個人創作基地，紀錄日常生活、開發心得、遊戲與音樂作品，還有各種天馬行空的雜想。
 	</p>
