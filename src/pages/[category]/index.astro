@@ -1,0 +1,234 @@
+---
+import { Image } from 'astro:assets';
+import { getCollection } from 'astro:content';
+import BaseHead from '../../components/BaseHead.astro';
+import Footer from '../../components/Footer.astro';
+import FormattedDate from '../../components/FormattedDate.astro';
+import Header from '../../components/Header.astro';
+import { CATEGORIES, SITE_TITLE, WORKS_CATEGORIES } from '../../consts';
+
+export async function getStaticPaths() {
+	return Object.keys(CATEGORIES).map((cat) => ({ params: { category: cat } }));
+}
+
+const { category } = Astro.params;
+const categoryInfo = CATEGORIES[category];
+const isWorks = WORKS_CATEGORIES.includes(category);
+
+const posts = (await getCollection('posts', (p) => p.data.category === category)).sort(
+	(a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()
+);
+---
+
+<!doctype html>
+<html lang="zh-TW">
+	<head>
+		<BaseHead
+			title={`${categoryInfo.emoji} ${categoryInfo.name} — ${SITE_TITLE}`}
+			description={`${categoryInfo.name}的所有文章`}
+		/>
+		<style>
+			.page-header {
+				padding: 2em 1em 1.5em;
+				border-bottom: 1px solid rgb(var(--gray-light));
+				margin-bottom: 2em;
+			}
+			.page-header h1 {
+				margin: 0;
+				font-size: 1.8em;
+			}
+			.page-header p {
+				color: rgb(var(--gray));
+				margin: 0.25em 0 0;
+			}
+
+			/* Article list layout */
+			.article-list {
+				max-width: 720px;
+				margin: 0 auto 3em;
+				padding: 0 1em;
+				list-style: none;
+			}
+			.article-list li {
+				border-bottom: 1px solid rgb(var(--gray-light));
+				padding: 1em 0;
+			}
+			.article-list li:first-child {
+				padding-top: 0;
+			}
+			.article-list a {
+				display: flex;
+				justify-content: space-between;
+				align-items: baseline;
+				gap: 1em;
+				text-decoration: none;
+				color: rgb(var(--black));
+			}
+			.article-list a:hover .post-title {
+				color: var(--accent);
+			}
+			.post-title {
+				font-weight: 600;
+			}
+			.post-date {
+				color: rgb(var(--gray));
+				white-space: nowrap;
+				font-size: 0.9em;
+				flex-shrink: 0;
+			}
+			.post-desc {
+				color: rgb(var(--gray));
+				font-size: 0.9em;
+				margin: 0.2em 0 0;
+			}
+
+			/* Works card grid layout */
+			.works-grid {
+				display: grid;
+				grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+				gap: 1.5rem;
+				max-width: 960px;
+				margin: 0 auto 3em;
+				padding: 0 1em;
+			}
+			.work-card {
+				border: 1px solid rgb(var(--gray-light));
+				border-radius: 12px;
+				overflow: hidden;
+				box-shadow: var(--box-shadow);
+				transition: box-shadow 0.2s ease;
+			}
+			.work-card:hover {
+				box-shadow: 0 4px 16px rgba(var(--black), 12%);
+			}
+			.work-card img {
+				width: 100%;
+				height: 160px;
+				object-fit: cover;
+				display: block;
+			}
+			.work-card-placeholder {
+				width: 100%;
+				height: 160px;
+				background: rgb(var(--gray-light));
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				font-size: 3em;
+			}
+			.work-card-body {
+				padding: 1em;
+			}
+			.work-card-body h2 {
+				margin: 0 0 0.4em;
+				font-size: 1.05em;
+			}
+			.work-card-body h2 a {
+				text-decoration: none;
+				color: rgb(var(--black));
+			}
+			.work-card-body h2 a:hover {
+				color: var(--accent);
+			}
+			.work-card-body p {
+				color: rgb(var(--gray));
+				font-size: 0.88em;
+				margin: 0 0 0.75em;
+			}
+			.work-card-footer {
+				display: flex;
+				gap: 0.5em;
+				flex-wrap: wrap;
+			}
+			.btn {
+				display: inline-block;
+				padding: 0.3em 0.8em;
+				border-radius: 6px;
+				font-size: 0.85em;
+				text-decoration: none;
+			}
+			.btn-primary {
+				background: rgb(var(--accent));
+				color: white;
+			}
+			.btn-outline {
+				border: 1px solid rgb(var(--accent));
+				color: rgb(var(--accent));
+			}
+			.btn:hover {
+				opacity: 0.85;
+			}
+
+			.empty {
+				text-align: center;
+				color: rgb(var(--gray));
+				padding: 3em 1em;
+			}
+
+			@media (max-width: 720px) {
+				.article-list a {
+					flex-direction: column;
+					gap: 0.2em;
+				}
+			}
+		</style>
+	</head>
+	<body>
+		<Header />
+		<main>
+			<div class="page-header">
+				<h1>{categoryInfo.emoji} {categoryInfo.name}</h1>
+				<p>{posts.length} 篇</p>
+			</div>
+
+			{posts.length === 0 && (
+				<p class="empty">還沒有文章，敬請期待！</p>
+			)}
+
+			{!isWorks && posts.length > 0 && (
+				<ul class="article-list">
+					{posts.map((post) => (
+						<li>
+							<a href={`/posts/${post.id}/`}>
+								<div>
+									<div class="post-title">{post.data.title}</div>
+									<div class="post-desc">{post.data.description}</div>
+								</div>
+								<span class="post-date">
+									<FormattedDate date={post.data.pubDate} />
+								</span>
+							</a>
+						</li>
+					))}
+				</ul>
+			)}
+
+			{isWorks && posts.length > 0 && (
+				<div class="works-grid">
+					{posts.map((post) => (
+						<div class="work-card">
+							{post.data.heroImage ? (
+								<Image width={520} height={260} src={post.data.heroImage} alt={post.data.title} />
+							) : (
+								<div class="work-card-placeholder">{categoryInfo.emoji}</div>
+							)}
+							<div class="work-card-body">
+								<h2><a href={`/posts/${post.id}/`}>{post.data.title}</a></h2>
+								<p>{post.data.description}</p>
+								<div class="work-card-footer">
+									<a href={`/posts/${post.id}/`} class="btn btn-outline">詳細介紹</a>
+									{post.data.externalLink && (
+										<a href={post.data.externalLink} target="_blank" rel="noopener" class="btn btn-primary">
+											前往作品 ↗
+										</a>
+									)}
+								</div>
+							</div>
+						</div>
+					))}
+				</div>
+			)}
+		</main>
+		<Footer />
+	</body>
+</html>
