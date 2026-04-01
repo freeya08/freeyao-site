@@ -10,7 +10,7 @@ export const CATEGORIES: Record<string, { name: string; emoji: string; isWorks: 
 	'games':      { name: '遊戲作品', emoji: '🎮', isWorks: true },
 	'music':      { name: '音樂作品', emoji: '🎵', isWorks: true },
 	'novels':     { name: '小說作品', emoji: '📖', isWorks: true },
-	'misc':       { name: '雜雜的',   emoji: '🗂️', isWorks: false },
+	'misc':       { name: '心得筆記', emoji: '🗂️', isWorks: false },
 	'vlog':       { name: 'VLOG',    emoji: '🎬', isWorks: false },
 };
 
